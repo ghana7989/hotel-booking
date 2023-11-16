@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/ghana7989/hotel-booking/db"
@@ -21,10 +20,9 @@ func NewUserHandler(userStore db.UserStore) *UserHandler {
 
 func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	var (
-		id  = c.Params("id")
-		ctx = context.Background()
+		id = c.Params("id")
 	)
-	u, err := h.UserStore.GetUserByID(ctx, id)
+	u, err := h.UserStore.GetUserByID(c.Context(), id)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"message": "user not found"})
 	}
@@ -32,10 +30,7 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
-	var (
-		ctx = context.Background()
-	)
-	users, err := h.UserStore.GetUsers(ctx)
+	users, err := h.UserStore.GetUsers(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"message": "internal server error"})
 	}
@@ -43,15 +38,13 @@ func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) HandleCreateUser(c *fiber.Ctx) error {
-	var (
-		ctx = context.Background()
-	)
+
 	u := new(types.User)
 	if err := c.BodyParser(u); err != nil {
 		return err
 	}
 	fmt.Println(u)
-	err := h.UserStore.CreateUser(ctx, u)
+	err := h.UserStore.CreateUser(c.Context(), u)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"message": "internal server error"})
 	}

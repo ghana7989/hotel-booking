@@ -24,9 +24,16 @@ func main() {
 	}
 
 	listenAddress := flag.String("listenAddress", ":3000", "server listen address")
-
 	flag.Parse()
-	app := fiber.New()
+
+	// Creating an instance of fiber
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			return ctx.Status(500).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		},
+	})
 	app.Use(logger.New())
 
 	apiV1 := app.Group("/api/v1")
