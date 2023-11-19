@@ -13,12 +13,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const uri = "mongodb://localhost:27017"
-
 func main() {
 
 	// Mongo DB stuff
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DB_URI))
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +35,7 @@ func main() {
 	app.Use(logger.New())
 
 	apiV1 := app.Group("/api/v1")
-	userStore := db.NewMongoUserStore(client)
+	userStore := db.NewMongoUserStore(client, db.DB_NAME)
 	userHandler := api.NewUserHandler(userStore)
 
 	apiV1.Get("/users", userHandler.HandleGetUsers)

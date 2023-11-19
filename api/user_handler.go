@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/ghana7989/hotel-booking/db"
 	"github.com/ghana7989/hotel-booking/types"
 	"github.com/gofiber/fiber/v2"
@@ -70,7 +72,7 @@ func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 
 func (h *UserHandler) HandleUpdateUser(c *fiber.Ctx) error {
 	var (
-		values bson.M
+		params types.UpdateUserParams
 		id     = c.Params("id")
 	)
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -78,11 +80,12 @@ func (h *UserHandler) HandleUpdateUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := c.BodyParser(&values); err != nil {
+	if err := c.BodyParser(&params); err != nil {
 		return err
 	}
 	filter := bson.M{"_id": oid}
-	err = h.UserStore.UpdateUser(c.Context(), filter, values)
+	err = h.UserStore.UpdateUser(c.Context(), filter, params)
+	fmt.Printf("params: %+v", params)
 	if err != nil {
 		return err
 	}

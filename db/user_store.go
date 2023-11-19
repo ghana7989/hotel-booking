@@ -2,8 +2,10 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ghana7989/hotel-booking/types"
+	"github.com/logrusorgru/aurora/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -12,11 +14,13 @@ import (
 const COLLECTION_NAME = "users"
 
 type UserStore interface {
+	Dropper
+
 	GetUserByID(ctx context.Context, id string) (*types.User, error)
 	GetUsers(ctx context.Context) ([]*types.User, error)
 	CreateUser(ctx context.Context, user *types.User) (*types.User, error)
 	DeleteUser(ctx context.Context, id string) error
-	UpdateUser(ctx context.Context, filter bson.M, values bson.M) error
+	UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error
 }
 
 type MongoUserStore struct {
@@ -25,8 +29,8 @@ type MongoUserStore struct {
 	coll   *mongo.Collection
 }
 
-func NewMongoUserStore(client *mongo.Client) *MongoUserStore {
-	coll := client.Database(DB_NAME).Collection(COLLECTION_NAME)
+func NewMongoUserStore(client *mongo.Client, dbName string) *MongoUserStore {
+	coll := client.Database(dbName).Collection(COLLECTION_NAME)
 	return &MongoUserStore{
 		client: client,
 		dbName: DB_NAME,
@@ -86,13 +90,18 @@ func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, values bson.M) error {
+func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error {
 	update := bson.M{
-		"$set": values,
+		"$set": params,
 	}
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *MongoUserStore) Drop(ctx context.Context) error {
+	fmt.Println(aurora.Red("--- Dropping users collection --- "))
+	return s.coll.Drop(ctx)
 }

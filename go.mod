@@ -4,6 +4,7 @@ go 1.21.4
 
 require (
 	github.com/gofiber/fiber/v2 v2.51.0
+	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.13.0
 	golang.org/x/crypto v0.15.0

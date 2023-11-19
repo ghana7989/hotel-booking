@@ -19,7 +19,11 @@ type CreateUserParams struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 }
-
+type UpdateUserParams struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+}
 type User struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" `
 	FirstName         string             `bson:"firstName" json:"firstName"`
