@@ -2,51 +2,56 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"time"
 
+	"github.com/ghana7989/hotel-booking/api"
 	"github.com/ghana7989/hotel-booking/db"
-	"github.com/ghana7989/hotel-booking/types"
+	"github.com/ghana7989/hotel-booking/db/fixtures"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
-	ctx := context.Background()
-	// Mongo DB stuff
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(db.DB_URI))
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
+	var (
+		ctx           = context.Background()
+		mongoEndpoint = os.Getenv("MONGO_DB_URL")
+		mongoDBName   = os.Getenv("MONGO_DB_NAME")
+	)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoEndpoint))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	hotelStore := db.NewMongoHotelStore(client, db.DB_NAME)
-	roomStore := db.NewMongoRoomStore(client, db.DB_NAME)
-	hotel := types.Hotel{
-		Name:     "Kaveri",
-		Location: "Khammam",
+	if err := client.Database(mongoDBName).Drop(ctx); err != nil {
+		log.Fatal(err)
 	}
-	insertedHotel, err := hotelStore.CreateHotel(ctx, &hotel)
-	if err != nil {
-		panic(err)
+	hotelStore := db.NewMongoHotelStore(client)
+	store := &db.Store{
+		User:    db.NewMongoUserStore(client),
+		Booking: db.NewMongoBookingStore(client),
+		Room:    db.NewMongoRoomStore(client, hotelStore),
+		Hotel:   hotelStore,
 	}
-	rooms := []types.Room{
-		{
-			HotelID:   insertedHotel.ID,
-			Type:      types.Single,
-			BasePrice: 1000,
-		},
-		{
-			HotelID:   insertedHotel.ID,
-			Type:      types.Double,
-			BasePrice: 2000,
-		},
-		{
-			HotelID:   insertedHotel.ID,
-			Type:      types.SeaSide,
-			BasePrice: 3000,
-		},
-	}
-	for _, room := range rooms {
-		_, err := roomStore.CreateRoom(ctx, &room)
-		if err != nil {
-			panic(err)
-		}
+
+	user := fixtures.AddUser(store, "james", "foo", false)
+	fmt.Println("james ->", api.CreateTokenFromUser(user))
+	admin := fixtures.AddUser(store, "admin", "admin", true)
+	fmt.Println("admin ->", api.CreateTokenFromUser(admin))
+	hotel := fixtures.AddHotel(store, "some hotel", "bermuda", 5, nil)
+	room := fixtures.AddRoom(store, "large", true, 88.44, hotel.ID)
+	booking := fixtures.AddBooking(store, user.ID, room.ID, time.Now(), time.Now().AddDate(0, 0, 5))
+	fmt.Println("booking ->", booking.ID)
+
+	for i := 0; i < 100; i++ {
+		name := fmt.Sprintf("random hotel name %d", i)
+		location := fmt.Sprintf("location %d", i)
+		fixtures.AddHotel(store, name, location, rand.Intn(5)+1, nil)
 	}
 }

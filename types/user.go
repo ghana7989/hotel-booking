@@ -1,17 +1,36 @@
 package types
 
 import (
-	"net/mail"
+	"fmt"
+	"regexp"
 
-	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-	minNameLength     = 3
-	minPasswordLength = 6
+	bcryptCost      = 12
+	minFirstNameLen = 2
+	minLastNameLen  = 2
+	minPasswordLen  = 7
 )
+
+type UpdateUserParams struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+}
+
+func (p UpdateUserParams) ToBSON() bson.M {
+	m := bson.M{}
+	if len(p.FirstName) > 0 {
+		m["firstName"] = p.FirstName
+	}
+	if len(p.LastName) > 0 {
+		m["lastName"] = p.LastName
+	}
+	return m
+}
 
 type CreateUserParams struct {
 	FirstName string `json:"firstName"`
@@ -19,50 +38,51 @@ type CreateUserParams struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 }
-type UpdateUserParams struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
+
+func (params CreateUserParams) Validate() map[string]string {
+	errors := map[string]string{}
+	if len(params.FirstName) < minFirstNameLen {
+		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
+	}
+	if len(params.LastName) < minLastNameLen {
+		errors["lastName"] = fmt.Sprintf("lastName length should be at least %d characters", minLastNameLen)
+	}
+	if len(params.Password) < minPasswordLen {
+		errors["password"] = fmt.Sprintf("password length should be at least %d characters", minPasswordLen)
+	}
+	if !isEmailValid(params.Email) {
+		errors["email"] = fmt.Sprintf("email %s is invalid", params.Email)
+	}
+	return errors
 }
+
+func IsValidPassword(encpw, pw string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(encpw), []byte(pw)) == nil
+}
+
+func isEmailValid(e string) bool {
+	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	return emailRegex.MatchString(e)
+}
+
 type User struct {
-	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" `
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	FirstName         string             `bson:"firstName" json:"firstName"`
 	LastName          string             `bson:"lastName" json:"lastName"`
 	Email             string             `bson:"email" json:"email"`
-	EncryptedPassword string             `bson:"encryptedPassword" json:"-"`
+	EncryptedPassword string             `bson:"EncryptedPassword" json:"-"`
+	IsAdmin           bool               `bson:"isAdmin" json:"isAdmin"`
 }
 
 func NewUserFromParams(params CreateUserParams) (*User, error) {
-	// encrypt the password
-	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	encpw, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
 	if err != nil {
 		return nil, err
 	}
-	params.Password = string(encryptedPassword)
 	return &User{
 		FirstName:         params.FirstName,
 		LastName:          params.LastName,
 		Email:             params.Email,
-		EncryptedPassword: string(encryptedPassword),
+		EncryptedPassword: string(encpw),
 	}, nil
-}
-
-func (u *User) ComparePassword(password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(u.EncryptedPassword), []byte(password))
-}
-
-func (params *CreateUserParams) Validate() error {
-	if len(params.FirstName) < minNameLength {
-		return errors.New("first name must be at least 3 characters")
-	}
-	if len(params.LastName) < minNameLength {
-		return errors.New("last name must be at least 3 characters")
-	}
-	if len(params.Password) < minPasswordLength {
-		return errors.New("password must be at least 6 characters")
-	}
-	if _, err := mail.ParseAddress(params.Email); err != nil {
-		return errors.New("invalid email address")
-	}
-	return nil
 }
