@@ -1,4 +1,4 @@
-FROM golang:1.20.3-alpine
+FROM golang:bookworm
 
 # Set the working directory to /app
 WORKDIR /app
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 
 # Download and install any required Go dependencies
-RUN go mod download
+RUN go mod tidy
 
 # Copy the entire source code to the working directory
 COPY . .
