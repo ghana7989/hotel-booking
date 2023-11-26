@@ -46,11 +46,15 @@ func invalidCredentials(c *fiber.Ctx) error {
 	})
 }
 
-// A handler should only do:
-//   - serialization of the incoming request (JSON)
-//   - do some data fetching from db
-//   - call some business logic
-//   - return the data back the user
+// HandleAuthenticate authenticates a user
+// @Summary Authenticate a user
+// @Description Authenticate a user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param auth body AuthParams true "Authentication Parameters"
+// @Router /auth [post]
+// @BasePath /api
 func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 	var params AuthParams
 	if err := c.BodyParser(&params); err != nil {

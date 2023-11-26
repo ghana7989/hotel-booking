@@ -7,7 +7,9 @@ import (
 
 	"github.com/ghana7989/hotel-booking/api"
 	"github.com/ghana7989/hotel-booking/db"
+	_ "github.com/ghana7989/hotel-booking/docs"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -23,6 +25,11 @@ var config = fiber.Config{
 	ErrorHandler: api.ErrorHandler,
 }
 
+// Package main Hotel Booking API.
+// @title Hotel Booking API
+// @version 1
+// @description This is a sample server for a hotel booking application.
+// @BasePath /api/v1
 func main() {
 	mongoEndpoint := os.Getenv("MONGO_DB_URL")
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoEndpoint))
@@ -49,20 +56,22 @@ func main() {
 		bookingHandler = api.NewBookingHandler(store)
 		app            = fiber.New(config)
 		auth           = app.Group("/api")
-		apiv1          = app.Group("/api/v1", api.JWTAuthentication(userStore))
+		apiv1          = app.Group("/api/v1")
 		admin          = apiv1.Group("/admin", api.AdminAuth)
 	)
+
+	app.Get("/swagger/*", swagger.HandlerDefault) // default
 
 	// auth
 	auth.Post("/auth", authHandler.HandleAuthenticate)
 
 	// Versioned API routes
 	// user handlers
-	apiv1.Get("/user/:id", userHandler.HandleGetUser)
-	apiv1.Put("/user/:id", userHandler.HandlePutUser)
-	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
-	apiv1.Post("/user", userHandler.HandlePostUser)
-	apiv1.Get("/user", userHandler.HandleGetUsers)
+	apiv1.Post("/users", userHandler.HandlePostUser)
+	apiv1.Get("/user/:id", api.JWTAuthentication(userStore), userHandler.HandleGetUser)
+	apiv1.Put("/user/:id", api.JWTAuthentication(userStore), userHandler.HandlePutUser)
+	apiv1.Delete("/user/:id", api.JWTAuthentication(userStore), userHandler.HandleDeleteUser)
+	apiv1.Get("/users", api.JWTAuthentication(userStore), userHandler.HandleGetUsers)
 
 	// hotel handlers
 	apiv1.Get("/hotel", hotelHandler.HandleGetHotels)
@@ -71,18 +80,19 @@ func main() {
 
 	// rooms handlers
 	apiv1.Get("/room", roomHandler.HandleGetRooms)
-	apiv1.Post("/room/:id/book", roomHandler.HandleBookRoom)
+	apiv1.Post("/room/:id/book", api.JWTAuthentication(userStore), roomHandler.HandleBookRoom)
 	// TODO: cancel a booking
 
 	// bookings handlers
-	apiv1.Get("/booking/:id", bookingHandler.HandleGetBooking)
-	apiv1.Get("/booking/:id/cancel", bookingHandler.HandleCancelBooking)
+	apiv1.Get("/booking/:id", api.JWTAuthentication(userStore), bookingHandler.HandleGetBooking)
+	apiv1.Get("/booking/:id/cancel", api.JWTAuthentication(userStore), bookingHandler.HandleCancelBooking)
 
 	// admin handlers
 	admin.Get("/booking", bookingHandler.HandleGetBookings)
 
 	listenAddr := os.Getenv("HTTP_LISTEN_ADDRESS")
 	app.Listen(listenAddr)
+
 }
 
 func init() {

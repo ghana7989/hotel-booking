@@ -57,7 +57,7 @@ func AddHotel(store *db.Store, name string, loc string, rating int, rooms []prim
 	return insertedHotel
 }
 
-func AddUser(store *db.Store, fn, ln string, admin bool) *types.User {
+func AddUser(store *db.Store, fn, ln string, isAdmin bool) *types.User {
 	user, err := types.NewUserFromParams(types.CreateUserParams{
 		Email:     fmt.Sprintf("%s@%s.com", fn, ln),
 		FirstName: fn,
@@ -67,7 +67,7 @@ func AddUser(store *db.Store, fn, ln string, admin bool) *types.User {
 	if err != nil {
 		log.Fatal(err)
 	}
-	user.IsAdmin = admin
+	user.IsAdmin = isAdmin
 	insertedUser, err := store.User.InsertUser(context.TODO(), user)
 	if err != nil {
 		log.Fatal(err)

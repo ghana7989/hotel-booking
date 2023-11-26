@@ -37,6 +37,14 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 	}
 }
 
+// HandleGetRooms gets all available rooms
+// @Summary Get available rooms
+// @Description Retrieve a list of all rooms
+// @Tags room
+// @Accept json
+// @Produce json
+// @Router /rooms [get]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 	rooms, err := h.store.Room.GetRooms(c.Context(), bson.M{})
 	if err != nil {
@@ -45,6 +53,16 @@ func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 	return c.JSON(rooms)
 }
 
+// HandleBookRoom books a room
+// @Summary Book a room
+// @Description Book a room with the given parameters
+// @Tags room
+// @Accept json
+// @Produce json
+// @Param id path string true "Room ID"
+// @Param book_room body BookRoomParams true "Booking Information"
+// @Router /rooms/{id}/book [post]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	var params BookRoomParams
 	if err := c.BodyParser(&params); err != nil {

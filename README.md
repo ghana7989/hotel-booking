@@ -50,3 +50,7 @@ docker run --name mongodb -d mongo:latest -p 27017:27017
 
 To run the tests in watch mode you need https://github.com/gotestyourself/gotestsum this package installed globally and then run `make test-watch` to run the tests in watch mode.
 To install the gotestsum package run `go install gotest.tools/gotestsum@latest` and make sure the `$GOPATH/bin` is in your $PATH.
+
+### Swagger UI
+
+Once the server is running go to /swagger/index.html to see the swagger UI.

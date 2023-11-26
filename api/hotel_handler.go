@@ -17,6 +17,14 @@ func NewHotelHandler(store *db.Store) *HotelHandler {
 	}
 }
 
+// HandleGetRooms gets rooms for a specific hotel
+// @Summary Get rooms of a hotel
+// @Description Retrieve a list of rooms associated with a given hotel ID
+// @Tags hotel
+// @Accept json
+// @Produce json
+// @Param id path string true "Hotel ID"
+// @Router /hotels/{id}/rooms [get]
 func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 	id := c.Params("id")
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -32,6 +40,14 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 	return c.JSON(rooms)
 }
 
+// HandleGetHotel gets details of a specific hotel
+// @Summary Get a hotel
+// @Description Retrieve details of a hotel by its ID
+// @Tags hotel
+// @Accept json
+// @Produce json
+// @Param id path string true "Hotel ID"
+// @Router /hotels/{id} [get]
 func (h *HotelHandler) HandleGetHotel(c *fiber.Ctx) error {
 	id := c.Params("id")
 	hotel, err := h.store.Hotel.GetHotelByID(c.Context(), id)
@@ -52,6 +68,17 @@ type HotelQueryParams struct {
 	Rating int
 }
 
+// HandleGetHotels gets a list of hotels
+// @Summary List hotels
+// @Description Retrieve a list of hotels with optional pagination and filtering by rating
+// @Tags hotel
+// @Accept json
+// @Produce json
+// @Param rating query int false "Hotel Rating"
+// @Param page query int false "Page number for pagination"
+// @Param limit query int false "Number of items per page for pagination"
+// @Router /hotels [get]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 	var params HotelQueryParams
 	if err := c.QueryParser(&params); err != nil {

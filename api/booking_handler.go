@@ -16,6 +16,15 @@ func NewBookingHandler(store *db.Store) *BookingHandler {
 	}
 }
 
+// HandleCancelBooking cancels a booking
+// @Summary Cancel a booking
+// @Description Cancel a booking by its ID
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param id path string true "Booking ID"
+// @Router /bookings/{id}/cancel [post]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *BookingHandler) HandleCancelBooking(c *fiber.Ctx) error {
 	id := c.Params("id")
 	booking, err := h.store.Booking.GetBookingByID(c.Context(), id)
@@ -35,6 +44,14 @@ func (h *BookingHandler) HandleCancelBooking(c *fiber.Ctx) error {
 	return c.JSON(genericResp{Type: "msg", Msg: "updated"})
 }
 
+// HandleGetBookings gets all bookings
+// @Summary List all bookings
+// @Description Retrieve a list of all bookings
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Router /bookings [get]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *BookingHandler) HandleGetBookings(c *fiber.Ctx) error {
 	bookings, err := h.store.Booking.GetBookings(c.Context(), bson.M{})
 	if err != nil {
@@ -43,6 +60,15 @@ func (h *BookingHandler) HandleGetBookings(c *fiber.Ctx) error {
 	return c.JSON(bookings)
 }
 
+// HandleGetBooking gets details of a specific booking
+// @Summary Get a booking
+// @Description Retrieve details of a booking by its ID
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param id path string true "Booking ID"
+// @Router /bookings/{id} [get]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *BookingHandler) HandleGetBooking(c *fiber.Ctx) error {
 	id := c.Params("id")
 	booking, err := h.store.Booking.GetBookingByID(c.Context(), id)

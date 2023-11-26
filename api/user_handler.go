@@ -19,6 +19,16 @@ func NewUserHandler(userStore db.UserStore) *UserHandler {
 	}
 }
 
+// HandlePutUser updates a user's details
+// @Summary Update a user
+// @Description Update user's details by ID
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param user body types.UpdateUserParams true "User Update Data"
+// @Router /users/{id} [put]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 	var (
 		params types.UpdateUserParams
@@ -34,6 +44,15 @@ func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 	return c.JSON(map[string]string{"updated": userID})
 }
 
+// HandleDeleteUser deletes a user
+// @Summary Delete a user
+// @Description Delete a user by ID
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Router /users/{id} [delete]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 	userID := c.Params("id")
 	if err := h.userStore.DeleteUser(c.Context(), userID); err != nil {
@@ -42,6 +61,15 @@ func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 	return c.JSON(map[string]string{"deleted": userID})
 }
 
+// HandlePostUser creates a new user
+// @Summary Create a user
+// @Description Create a new user with the given data
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param user body types.CreateUserParams true "User Creation Data"
+// @Router /users [post]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 	var params types.CreateUserParams
 	if err := c.BodyParser(&params); err != nil {
@@ -61,6 +89,15 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 	return c.JSON(insertedUser)
 }
 
+// HandleGetUser gets a single user's details
+// @Summary Get a user
+// @Description Get details of a user by ID
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Router /users/{id} [get]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
@@ -75,6 +112,14 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
+// HandleGetUsers gets the details of all users
+// @Summary List all users
+// @Description Get details of all users
+// @Tags user
+// @Accept json
+// @Produce json
+// @Router /users [get]
+// @Header 200 {string} X-Api-Token "API Token"
 func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
 	users, err := h.userStore.GetUsers(c.Context())
 	if err != nil {
